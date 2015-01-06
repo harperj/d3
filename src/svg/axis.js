@@ -35,9 +35,13 @@ d3.svg.axis = function() {
           tickTransform;
 
       // Domain.
-      var range = d3_scaleRange(scale1),
-          path = g.selectAll(".domain").data([0]),
-          pathUpdate = (path.enter().append("path").attr("class", "domain"), d3.transition(path));
+      var range = d3_scaleRange(scale1);
+
+      var rangeTicks = g.selectAll("rangeTick").data(range),
+          rangeTickUpdate = rangeTicks.enter().append("line").attr("class", "rangeTick").attr('class', 'domain');
+
+      var rangeLine = g.selectAll("rangeLine").data([{"begin": range[0], "end": range[1]}]),
+          rangeLineUpdate = rangeLine.enter().append("line").attr("class", "rangeLine").attr('class', 'domain');
 
       tickEnter.append("line");
       tickEnter.append("text");
@@ -53,17 +57,18 @@ d3.svg.axis = function() {
       if (orient === "bottom" || orient === "top") {
         tickTransform = d3_svg_axisX, x1 = "x", y1 = "y", x2 = "x2", y2 = "y2";
         text.attr("dy", sign < 0 ? "0em" : ".71em").style("text-anchor", "middle");
-        pathUpdate.attr("d", "M" + range[0] + "," + sign * outerTickSize + "V0H" + range[1] + "V" + sign * outerTickSize);
       } else {
         tickTransform = d3_svg_axisY, x1 = "y", y1 = "x", x2 = "y2", y2 = "x2";
         text.attr("dy", ".32em").style("text-anchor", sign < 0 ? "end" : "start");
-        pathUpdate.attr("d", "M" + sign * outerTickSize + "," + range[0] + "H0V" + range[1] + "H" + sign * outerTickSize);
       }
 
       lineEnter.attr(y2, sign * innerTickSize);
       textEnter.attr(y1, sign * tickSpacing);
       lineUpdate.attr(x2, 0).attr(y2, sign * innerTickSize);
       textUpdate.attr(x1, 0).attr(y1, sign * tickSpacing);
+
+      rangeTickUpdate.attr(y2, sign * outerTickSize);
+      rangeTickUpdate.attr(x2, 0).attr(y2, sign * outerTickSize);
 
       // If either the new or old scale is ordinal,
       // entering ticks are undefined in the old scale,
@@ -81,6 +86,26 @@ d3.svg.axis = function() {
 
       tickEnter.call(tickTransform, scale0, scale1);
       tickUpdate.call(tickTransform, scale1, scale1);
+
+      rangeTickUpdate.attr("transform", function(d) {
+        if (orient === "bottom" || orient === "top") {
+          return "translate(" + d + ",0)";
+        }
+        else {
+          return "translate(0," + d +")";
+        }
+      });
+
+      rangeLineUpdate.attr(x1, function(d) {
+        return d.begin;
+      });
+      rangeLineUpdate.attr(x2, function(d) {
+        return d.end;
+      });
+      rangeLineUpdate.attr(y1, function() {
+        return sign * innerTickSize;
+      });
+
     });
   }
 
